@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}聊天室{% endblock %}
+
+{% block content %}
+<h2>聊天室</h2>
+<div class="chat-container">
+    <div class="chat-messages" id="chat-messages">
+        <!-- 聊天消息展示区域 -->
+    </div>
+    <div class="chat-input">
+        <input type="text" id="message-input" placeholder="输入消息">
+        <button class="btn btn-primary" id="send-button">发送</button>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+<script>
+    var socket = io();
+
+    document.getElementById('send-button').addEventListener('click', function() {
+        var message = document.getElementById('message-input').value;
+        if (message) {
+            socket.send(message);
+            document.getElementById('message-input').value = '';
+        }
+    });
+
+    socket.on('message', function(msg) {
+        var messages = document.getElementById('chat-messages');
+        var newMessage = document.createElement('p');
+        newMessage.textContent = msg;
+        messages.appendChild(newMessage);
+    });
+</script>
+{% endblock %}

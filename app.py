@@ -8,6 +8,7 @@ from functools import wraps
 from urllib.parse import urlparse, urljoin
 from datetime import timedelta
 import os
+from flask_socketio import SocketIO, send
 
 # 初始化 Flask 应用
 app = Flask(__name__)
@@ -20,6 +21,8 @@ app.permanent_session_lifetime = timedelta(days=7)
 
 # 初始化数据库
 db = SQLAlchemy(app)
+# 初始化 SocketIO
+socketio = SocketIO(app, async_mode='eventlet')
 
 # 数据模型
 class User(db.Model):
@@ -70,7 +73,7 @@ def login_required(f):
 # 路由视图
 @app.route('/')
 def home():
-    return render_template('base.html')
+    return render_template('home.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -129,6 +132,18 @@ def logout():
     flash('您已成功退出登录。', 'info')
     return redirect(url_for('home'))
 
+@app.route('/chatroom')
+@login_required
+def chatroom():
+    return render_template('chatroom.html', username=session['username'])
+
+# SocketIO 事件处理
+@socketio.on('message')
+def handle_message(message):
+    username = session.get('username')
+    full_message = f'{username}: {message}'
+    send(full_message, broadcast=True)
+
 # 启动应用
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)

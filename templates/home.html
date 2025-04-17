@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}主页{% endblock %}
+
+{% block content %}
+<div class="hero-container">
+    <h1 class="display-1 animated-heading">即时通讯系统</h1>
+    <p class="lead animated-subheading">开启全新的沟通体验</p>
+    {% if 'user_id' not in session %}
+        <a href="{{ url_for('register') }}" class="btn btn-lg btn-primary animated-button">注册</a>
+        <a href="{{ url_for('login') }}" class="btn btn-lg btn-success animated-button">登录</a>
+    {% else %}
+        <a href="{{ url_for('chatroom') }}" class="btn btn-lg btn-primary animated-button">进入聊天室</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-lg btn-danger animated-button">退出登录</a>
+    {% endif %}
+</div>
+<div class="floating-icons">
+    <img src="{{ url_for('static', filename='img/icon1.png') }}" alt="Icon 1" class="floating-icon icon-1">
+    <img src="{{ url_for('static', filename='img/icon2.png') }}" alt="Icon 2" class="floating-icon icon-2">
+    <img src="{{ url_for('static', filename='img/icon3.png') }}" alt="Icon 3" class="floating-icon icon-3">
+</div>
+{% endblock %}
