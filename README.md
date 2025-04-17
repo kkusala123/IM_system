@@ -7,7 +7,7 @@
 
 ## 📸 项目预览
 
-![截图示例](static/img/bg.jpg)
+![截图示例](static/img/example.jpg)
 
 - 🌐 动态主界面，带背景图和缓动动画  
 - 👤 用户注册 / 登录 / 注销  
