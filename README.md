@@ -46,8 +46,8 @@ project/
 1️⃣ 克隆项目：
 
 ```bash
-git clone https://github.com/yourname/chat-system.git
-cd chat-system
+https://github.com/kkusala123/python-project_deepseek.git
+cd python-project_deepseek
 ```
 
 2️⃣ 安装依赖：
