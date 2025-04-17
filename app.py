@@ -138,6 +138,35 @@ def chatroom():
     return render_template('chatroom.html', username=session['username'])
 
 # SocketIO 事件处理
+@socketio.on('login')
+def handle_login(data):
+    email = data.get('email')
+    password = data.get('password')
+    user = User.query.filter_by(email=email).first()
+    if user and user.check_password(password):
+        session['user_id'] = user.id
+        session['username'] = user.username
+        socketio.emit('login_success')
+    else:
+        socketio.emit('login_failure')
+
+@socketio.on('register')
+def handle_register(data):
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    if User.query.filter_by(email=email).first():
+        socketio.emit('register_failure')
+        return
+    if User.query.filter_by(username=username).first():
+        socketio.emit('register_failure')
+        return
+    user = User(username=username, email=email)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    socketio.emit('register_success')
+
 @socketio.on('message')
 def handle_message(message):
     username = session.get('username')
