@@ -170,7 +170,7 @@ def handle_register(data):
 @socketio.on('message')
 def handle_message(message):
     username = session.get('username')
-    full_message = f'{username}: {message}'
+    full_message = f'{username}说: {message}'
     send(full_message, broadcast=True)
 
 # 启动应用
