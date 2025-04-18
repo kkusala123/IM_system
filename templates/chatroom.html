@@ -3,34 +3,42 @@
 {% block title %}聊天室{% endblock %}
 
 {% block content %}
-<h2>聊天室</h2>
-<div class="chat-container">
-    <div class="chat-messages" id="chat-messages">
-        <!-- 聊天消息展示区域 -->
-    </div>
-    <div class="chat-input">
-        <input type="text" id="message-input" placeholder="输入消息">
-        <button class="btn btn-primary" id="send-button">发送</button>
-    </div>
+<h2 class="mb-4 text-center">💬 聊天室</h2>
+
+<div class="chat-container p-4">
+  <div class="chat-messages mb-3" id="chat-messages">
+    <!-- 聊天消息展示区域 -->
+  </div>
+  <div class="chat-input d-flex">
+    <input type="text" id="message-input" class="form-control me-2" placeholder="输入消息，按发送">
+    <button class="btn btn-primary px-4" id="send-button">发送</button>
+  </div>
 </div>
 
 <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
 <script>
-    var socket = io();
+  var socket = io();
 
-    document.getElementById('send-button').addEventListener('click', function() {
-        var message = document.getElementById('message-input').value;
-        if (message) {
-            socket.send(message);
-            document.getElementById('message-input').value = '';
-        }
-    });
+  document.getElementById('send-button').addEventListener('click', sendMessage);
+  document.getElementById('message-input').addEventListener('keyup', function(e) {
+    if (e.key === 'Enter') sendMessage();
+  });
 
-    socket.on('message', function(msg) {
-        var messages = document.getElementById('chat-messages');
-        var newMessage = document.createElement('p');
-        newMessage.textContent = msg;
-        messages.appendChild(newMessage);
-    });
+  function sendMessage() {
+    var message = document.getElementById('message-input').value;
+    if (message) {
+      socket.send(message);
+      document.getElementById('message-input').value = '';
+    }
+  }
+
+  socket.on('message', function(msg) {
+    var messages = document.getElementById('chat-messages');
+    var newMessage = document.createElement('div');
+    newMessage.className = 'chat-bubble';
+    newMessage.textContent = msg;
+    messages.appendChild(newMessage);
+    messages.scrollTop = messages.scrollHeight;
+  });
 </script>
 {% endblock %}
