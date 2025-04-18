@@ -153,8 +153,10 @@ def dashboard():
 @app.route('/logout')
 def logout():
     if 'username' in session:
-        online_users.discard(session['username'])
-        socketio.emit('update_users', {'users': list(online_users), 'count': len(online_users)}, broadcast=True)
+        username = session['username']
+        online_users.discard(username)
+        logger.debug(f"用户 {username} 退出，广播更新用户列表")
+        socketio.emit('update_users', {'users': list(online_users), 'count': len(online_users)})  # Removed broadcast=True
     session.clear()
     flash('您已成功退出登录。', 'info')
     return redirect(url_for('home'))
@@ -170,7 +172,7 @@ def handle_connect():
     if 'username' in session:
         logger.debug(f"用户 {session['username']} 连接")
         online_users.add(session['username'])
-        socketio.emit('update_users', {'users': list(online_users), 'count': len(online_users)}, broadcast=True)
+        socketio.emit('update_users', {'users': list(online_users), 'count': len(online_users)})
     else:
         logger.warning("连接时无用户名，忽略")
 
@@ -179,7 +181,9 @@ def handle_disconnect():
     if 'username' in session:
         logger.debug(f"用户 {session['username']} 断开连接")
         online_users.discard(session['username'])
-        socketio.emit('update_users', {'users': list(online_users), 'count': len(online_users)}, broadcast=True)
+        socketio.emit('update_users', {'users': list(online_users), 'count': len(online_users)})
+    else:
+        logger.warning("断开连接时无用户名，忽略")
 
 @socketio.on('message')
 def handle_message(message):
@@ -193,13 +197,13 @@ def handle_message(message):
     
     full_message = f'{username}说: {message}'
     logger.debug(f"广播消息: {full_message}")
-    socketio.emit('message', full_message, broadcast=True)
+    socketio.emit('message', full_message)
     
     if message.startswith('@AI'):
         ai_response = get_ai_response(message[3:].strip())
         ai_message = f'AI助手说: {ai_response}'
         logger.debug(f"广播AI消息: {ai_message}")
-        socketio.emit('message', ai_message, broadcast=True)
+        socketio.ecmit('message', ai_message)
 
 @socketio.on('login')
 def handle_login(data):
