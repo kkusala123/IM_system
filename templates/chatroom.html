@@ -3,42 +3,102 @@
 {% block title %}聊天室{% endblock %}
 
 {% block content %}
-<h2 class="mb-4 text-center">💬 聊天室</h2>
-
-<div class="chat-container p-4">
-  <div class="chat-messages mb-3" id="chat-messages">
-    <!-- 聊天消息展示区域 -->
-  </div>
-  <div class="chat-input d-flex">
-    <input type="text" id="message-input" class="form-control me-2" placeholder="输入消息，按发送">
-    <button class="btn btn-primary px-4" id="send-button">发送</button>
-  </div>
+<div class="fade-in">
+    <h2 class="mb-4 text-center">💬 聊天室</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="chat-container p-4">
+                <div class="chat-messages mb-3" id="chat-messages">
+                    <!-- 聊天消息展示区域 -->
+                </div>
+                <div class="chat-input d-flex">
+                    <input type="text" id="message-input" class="form-control me-2" placeholder="输入消息，按发送或@AI与AI对话">
+                    <button class="btn btn-primary px-4" id="send-button">发送</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">在线用户 (<span id="online-count">0</span>)</h5>
+                    <ul id="online-users" class="list-group">
+                        <!-- 在线用户列表 -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
-  var socket = io();
+    var socket = io({
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+    });
 
-  document.getElementById('send-button').addEventListener('click', sendMessage);
-  document.getElementById('message-input').addEventListener('keyup', function(e) {
-    if (e.key === 'Enter') sendMessage();
-  });
+    socket.on('connect', function() {
+        console.log('Connected to SocketIO server');
+    });
 
-  function sendMessage() {
-    var message = document.getElementById('message-input').value;
-    if (message) {
-      socket.send(message);
-      document.getElementById('message-input').value = '';
+    socket.on('connect_error', function(error) {
+        console.error('Connection error:', error);
+        alert('无法连接到聊天服务器，请刷新页面重试');
+    });
+
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    function sendMessage() {
+        var message = document.getElementById('message-input').value.trim();
+        if (message && socket.connected) {
+            socket.emit('message', message);
+            document.getElementById('message-input').value = '';
+        } else if (!socket.connected) {
+            alert('未连接到服务器，请检查网络或刷新页面');
+        }
     }
-  }
 
-  socket.on('message', function(msg) {
-    var messages = document.getElementById('chat-messages');
-    var newMessage = document.createElement('div');
-    newMessage.className = 'chat-bubble';
-    newMessage.textContent = msg;
-    messages.appendChild(newMessage);
-    messages.scrollTop = messages.scrollHeight;
-  });
+    socket.on('message', function(msg) {
+        var messages = document.getElementById('chat-messages');
+        var newMessage = document.createElement('div');
+        newMessage.className = 'chat-bubble mb-2 p-2 bg-light rounded';
+        newMessage.textContent = msg;
+        messages.appendChild(newMessage);
+        messages.scrollTop = messages.scrollHeight;
+    });
+
+    socket.on('update_users', function(data) {
+        var userList = document.getElementById('online-users');
+        var count = document.getElementById('online-count');
+        userList.innerHTML = '';
+        data.users.forEach(function(user) {
+            var li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = user;
+            userList.appendChild(li);
+        });
+        count.textContent = data.count;
+    });
 </script>
+<style>
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.chat-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+}
+.chat-messages {
+    height: 400px;
+    overflow-y: auto;
+}
+</style>
 {% endblock %}

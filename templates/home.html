@@ -1,22 +1,108 @@
 {% extends 'base.html' %}
 
-{% block title %}主页{% endblock %}
+{% block title %}聊天室{% endblock %}
 
 {% block content %}
-<div class="hero-container">
-    <h1 class="display-1 animated-heading">即时通讯系统</h1>
-    <p class="lead animated-subheading">开启全新的沟通体验</p>
-    {% if 'user_id' not in session %}
-        <a href="{{ url_for('register') }}" class="btn btn-lg btn-primary animated-button">注册</a>
-        <a href="{{ url_for('login') }}" class="btn btn-lg btn-success animated-button">登录</a>
-    {% else %}
-        <a href="{{ url_for('chatroom') }}" class="btn btn-lg btn-primary animated-button">进入聊天室</a>
-        <a href="{{ url_for('logout') }}" class="btn btn-lg btn-danger animated-button">退出登录</a>
-    {% endif %}
+<div class="fade-in">
+    <h2 class="mb-4 text-center">💬 聊天室</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="chat-container p-4">
+                <div class="chat-messages mb-3" id="chat-messages">
+                    <!-- 聊天消息展示区域 -->
+                </div>
+                <div class="chat-input d-flex">
+                    <input type="text" id="message-input" class="form-control me-2" placeholder="输入消息，按发送或@AI与AI对话">
+                    <button class="btn btn-primary px-4" id="send-button">发送</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">在线用户 (<span id="online-count">0</span>)</h5>
+                    <ul id="online-users" class="list-group">
+                        <!-- 在线用户列表 -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="floating-icons">
-    <img src="{{ url_for('static', filename='img/icon1.png') }}" alt="Icon 1" class="floating-icon icon-1">
-    <img src="{{ url_for('static', filename='img/icon2.png') }}" alt="Icon 2" class="floating-icon icon-2">
-    <img src="{{ url_for('static', filename='img/icon3.png') }}" alt="Icon 3" class="floating-icon icon-3">
-</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    var socket = io('http://127.0.0.1:5000', {
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+    });
+
+    socket.on('connect', function() {
+        console.log('Connected to SocketIO server');
+    });
+
+    socket.on('connect_error', function(error) {
+        console.error('Connection error:', error);
+        alert('无法连接到聊天服务器，请检查网络或刷新页面');
+    });
+
+    socket.on('reconnect', function(attempt) {
+        console.log('Reconnected to server after', attempt, 'attempts');
+    });
+
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') sendMessage();
+    });
+
+    function sendMessage() {
+        var message = document.getElementById('message-input').value.trim();
+        if (message && socket.connected) {
+            socket.emit('message', message);
+            document.getElementById('message-input').value = '';
+        } else if (!socket.connected) {
+            alert('未连接到服务器，请检查网络或刷新页面');
+        }
+    }
+
+    socket.on('message', function(msg) {
+        var messages = document.getElementById('chat-messages');
+        var newMessage = document.createElement('div');
+        newMessage.className = 'chat-bubble mb-2 p-2 bg-light rounded';
+        newMessage.textContent = msg;
+        messages.appendChild(newMessage);
+        messages.scrollTop = messages.scrollHeight;
+    });
+
+    socket.on('update_users', function(data) {
+        var userList = document.getElementById('online-users');
+        var count = document.getElementById('online-count');
+        userList.innerHTML = '';
+        data.users.forEach(function(user) {
+            var li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.textContent = user;
+            userList.appendChild(li);
+        });
+        count.textContent = data.count;
+    });
+</script>
+<style>
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.chat-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+}
+.chat-messages {
+    height: 400px;
+    overflow-y: auto;
+}
+</style>
 {% endblock %}
