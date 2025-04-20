@@ -136,17 +136,18 @@ def login():
             next_page = request.args.get('next')
             if next_page and is_safe_url(next_page):
                 return redirect(next_page)
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('profile'))
         else:
             flash('登录失败，请检查邮箱和密码。', 'danger')
     return render_template('login.html', form=form)
 
-@app.route('/dashboard')
+@app.route('/profile')
 @login_required
-def dashboard():
+def profile():
     user = User.query.get(session['user_id'])
-    return render_template('dashboard.html', 
+    return render_template('profile.html', 
                          username=session['username'], 
+                         email=user.email,
                          chat_count=user.chat_count,
                          online_count=len(online_users))
 
@@ -203,7 +204,7 @@ def handle_message(message):
         ai_response = get_ai_response(message[3:].strip())
         ai_message = f'AI助手说: {ai_response}'
         logger.debug(f"广播AI消息: {ai_message}")
-        socketio.ecmit('message', ai_message)
+        socketio.emit('message', ai_message)
 
 @socketio.on('login')
 def handle_login(data):

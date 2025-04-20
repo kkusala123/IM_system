@@ -1,15 +1,17 @@
 {% extends 'base.html' %}
 
-{% block title %}仪表盘{% endblock %}
+{% block title %}个人资料{% endblock %}
 
 {% block content %}
 <div class="fade-in">
     <h2>欢迎，{{ username }}！</h2>
-    <p class="lead">这是你的仪表盘。</p>
+    <p class="lead">这是你的个人资料页面。</p>
     <div class="card mt-4">
         <div class="card-body">
-            <h5 class="card-title">统计信息</h5>
-            <p class="card-text">你的聊天消息数: {{ chat_count }}</p>
+            <h5 class="card-title">个人信息</h5>
+            <p class="card-text">用户名: {{ username }}</p>
+            <p class="card-text">邮箱: {{ email }}</p>
+            <p class="card-text">聊天消息数: {{ chat_count }}</p>
             <p class="card-text">当前在线用户数: {{ online_count }}</p>
         </div>
     </div>
